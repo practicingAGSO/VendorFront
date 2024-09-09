@@ -1,0 +1,37 @@
+<section class="login pt-3 pb-3">
+    <p-toast />
+    <div class="surface-card p-4 shadow-2 border-round w-full login-card">
+        <div class="text-center mb-5">
+            <div class="text-900 text-3xl font-medium mb-3">Registro</div>
+            <a (click)="navigateToLogin()" class="font-medium no-underline ml-2 text-blue-500 cursor-pointer">Volver al login</a>
+        </div>
+    
+        <form [formGroup]="registerForm" (ngSubmit)="register()">
+            <div>
+                <div class="input-container">
+                    <label for="username" class="block text-900 font-medium mb-2">Usuario</label>
+                    <input formControlName="username" id="username" type="text" placeholder="Usuario" pInputText class="w-full" autocomplete="username">
+                    @if(registerForm.get('username')?.invalid && (registerForm.get('username')?.dirty || registerForm.get('username')?.touched)){
+                        @if(registerForm.get('username')?.errors?.['required']){
+                            <small class="p-error">El usuario es obligatorio.</small>
+                        }
+                    }
+                </div>
+                <div class="input-container">
+                    <label for="password" class="block text-900 font-medium mb-2">Contraseña</label>
+                    <input formControlName="password"  id="password" type="password" placeholder="Contraseña" pInputText class="w-full">
+                    @if(registerForm.get('password')?.invalid && (registerForm.get('password')?.dirty || registerForm.get('password')?.touched)){
+                        @if(registerForm.get('password')?.errors?.['required']){
+                            <small class="p-error">La contraseña es obligatoria.</small>
+        
+                        }
+                    }
+                </div>
+                <div class="flex align-items-center justify-content-between mb-6">
+                </div>
+        
+                <button type="submit" pButton pRipple label="Registrar" icon="pi pi-user" class="w-full" [disabled]="isValid()"></button>
+            </div>
+        </form>
+    </div>
+</section>

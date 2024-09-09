@@ -1,0 +1,38 @@
+<section class="login pt-3 pb-3">
+    <p-toast />
+    <div class="surface-card p-4 shadow-2 border-round w-full login-card">
+        <div class="text-center mb-5">
+            <div class="text-900 text-3xl font-medium mb-3">Bienvenido</div>
+            <span class="text-600 font-medium line-height-3">No tienes un usuario?</span>
+            <a (click)="navigateToRegister()" class="font-medium no-underline ml-2 text-blue-500 cursor-pointer">Regístrate</a>
+        </div>
+    
+        <form [formGroup]="loginForm" (ngSubmit)="login()">
+            <div>
+                <div class="input-container">
+                    <label for="username" class="block text-900 font-medium mb-2">Usuario</label>
+                    <input formControlName="username" id="username" type="text" placeholder="Usuario" pInputText class="w-full" autocomplete="username">
+                    @if(loginForm.get('username')?.invalid && (loginForm.get('username')?.dirty || loginForm.get('username')?.touched)){
+                        @if(loginForm.get('username')?.errors?.['required']){
+                            <small class="p-error">El usuario es obligatorio.</small>
+                        }
+                    }
+                </div>
+                <div class="input-container">
+                    <label for="password" class="block text-900 font-medium mb-2">Contraseña</label>
+                    <input formControlName="password"  id="password" type="password" placeholder="Contraseña" pInputText class="w-full">
+                    @if(loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)){
+                        @if(loginForm.get('password')?.errors?.['required']){
+                            <small class="p-error">La contraseña es obligatoria.</small>
+        
+                        }
+                    }
+                </div>
+                <div class="flex align-items-center justify-content-between mb-6">
+                </div>
+        
+                <button type="submit" pButton pRipple label="Iniciar Sesión" icon="pi pi-user" class="w-full" [disabled]="isValid()"></button>
+            </div>
+        </form>
+    </div>
+</section>

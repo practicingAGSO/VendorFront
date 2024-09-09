@@ -1,0 +1,15 @@
+.login{
+    display: grid;
+    place-content: center;
+    min-height: 100vh;
+}
+
+.login-card{
+    min-width: 400px;
+}
+
+@media (max-width: 450px) {
+    .login-card{
+        width: 100%;
+    }
+}
