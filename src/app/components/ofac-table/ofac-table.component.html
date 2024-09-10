@@ -1,1 +1,29 @@
-<p>ofac-table works!</p>
+<p-table
+    [value]="results"
+    [tableStyle]="{ 'min-width': '30rem', 'max-height': '400px' }" >
+    <ng-template pTemplate="caption">
+        <div class="flex align-items-center justify-content-between">
+            <h5 class="m-0">Resultados</h5>
+        </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+        <tr>
+            <th style="width:25%">Nombre</th>
+            <th style="width:25%">Dirección</th>
+            <th style="width:25%">Tipo</th>
+            <th style="width:25%">Programa/s</th>
+            <th style="width:25%">Lista</th>
+            <th style="width:25%">Puntaje</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-result>
+        <tr>
+            <td>{{ result.name }}</td>
+            <td>{{ result.address }}</td>
+            <td>{{ result.type }}</td>
+            <td>{{ result.program }}</td>
+            <td>{{ result.list }}</td>
+            <td>{{ result.score }}</td>
+        </tr>
+    </ng-template>
+    </p-table>

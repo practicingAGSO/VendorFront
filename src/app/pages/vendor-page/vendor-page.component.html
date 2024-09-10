@@ -10,6 +10,10 @@
                 class="mr-2" 
                 (click)="openNew()" />
         </ng-template>
+        <ng-template pTemplate="right">
+            <p-button class="button-option" label="Salir" icon="pi pi-sign-out" [text]="true" severity="danger" (click)="logout()"/>
+        </ng-template>
+
     </p-toolbar>
 
     <p-table
@@ -17,7 +21,7 @@
         [value]="vendors"
         [rows]="10"
         [paginator]="true"
-        [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
+        [globalFilterFields]="['companyName', 'tradeName', 'taxId', 'email']"
         [tableStyle]="{ 'min-width': '75rem' }"
         [rowHover]="true"
         dataKey="id"
@@ -27,7 +31,7 @@
     >
         <ng-template pTemplate="caption">
             <div class="flex align-items-center justify-content-between">
-                <h5 class="m-0">Mis productos</h5>
+                <h5 class="m-0">Proveedores</h5>
                 <span class="p-input-icon-left">
                     <i class="pi pi-search"></i>
                     <input pInputText type="text" (input)="applyFilterGlobal($event, 'contains')" placeholder="Buscar" id="filter"/>
@@ -48,16 +52,16 @@
                 <th pSortableColumn="number" style="min-width:10rem">
                     Número telefónico <p-sortIcon field="number" />
                 </th>
-                <th pSortableColumn="email" style="min-width:10rem">
+                <th pSortableColumn="email" style="min-width:13rem">
                     Correo electrónico <p-sortIcon field="email" />
                 </th>
-                <th pSortableColumn="websiteUrl" style="min-width:10rem">
+                <th pSortableColumn="websiteUrl" style="min-width:13rem">
                     Sitio web <p-sortIcon field="websiteUrl" />
                 </th>
-                <th pSortableColumn="physicalAddress" style="min-width:10rem">
+                <th pSortableColumn="physicalAddress" style="min-width:13rem">
                     Dirección física <p-sortIcon field="physicalAddress" />
                 </th>
-                <th pSortableColumn="country" style="min-width:10rem">
+                <th pSortableColumn="country" style="min-width:7rem">
                     País <p-sortIcon field="country" />
                 </th>
                 <th pSortableColumn="annualTurnover" style="min-width:10rem">
@@ -66,7 +70,8 @@
                 <th pSortableColumn="lastEdition" style="min-width:10rem">
                     Fecha de última edición <p-sortIcon field="lastEdition" />
                 </th>
-                <th></th>
+                <th>Screening</th>
+                <th style="min-width:10rem"></th>
             </tr>
         </ng-template>
         <ng-template pTemplate="body" let-vendor>
@@ -87,7 +92,7 @@
                     {{ vendor.email }}
                 </td>
                 <td>
-                    {{ vendor.websiteUrl }}
+                    <a [href]="vendor.websiteUrl" target="_blank">{{ vendor.websiteUrl }}</a>
                 </td>
                 <td>
                     {{ vendor.physicalAddress }}
@@ -100,6 +105,17 @@
                 </td>
                 <td>
                     {{ vendor.lastEdition | date: 'dd/MM/yyyy' }}
+                </td>
+                <td>
+                    <p-button 
+                    pRipple 
+                    icon="pi pi-info" 
+                    class="mr-2" 
+                    [rounded]="true" 
+                    [outlined]="true" 
+                    severity="success" 
+                    (click)="openScreening(vendor.companyName)"
+                     />
                 </td>
                 <td>
                     <p-button 
@@ -123,89 +139,194 @@
     </p-table>
 
     <p-dialog 
-        [(visible)]="vendorDialog" 
-        [style]="{ width: '450px' }" 
-        header="Detalles del Proveedor" 
-        [modal]="true" 
-        styleClass="p-fluid">
-            <ng-template pTemplate="content">
-                <div class="formgrid grid">
-                    <div class="field">
-                        <label for="companyName">Razón social</label>
-                        <input pInputText
-                            id="companyName"
-                            [(ngModel)]="vendor.companyName" />
-                    </div>
-                    <div class="field">
-                        <label for="tradeName">Nombre comercial</label>
-                        <input pInputText
-                            id="tradeName"
-                            [(ngModel)]="vendor.tradeName" />
-                    </div>
-                    <div class="field">
-                        <label for="taxId">Identificación tributaria</label>
-                        <input pInputText
-                            id="taxId"
-                            [(ngModel)]="vendor.taxId" />
-                    </div>
-                    <div class="field">
-                        <label for="number">Número telefónico</label>
-                        <input pInputText
-                            id="number"
-                            [(ngModel)]="vendor.number" />
-                    </div>
-                    <div class="field">
-                        <label for="email">Correo electrónico</label>
-                        <input pInputText
-                            id="email"
-                            [(ngModel)]="vendor.email" />
-                    </div>
-                    <div class="field">
-                        <label for="websiteUrl">Sitio web</label>
-                        <input pInputText
-                            id="websiteUrl"
-                            [(ngModel)]="vendor.websiteUrl" />
-                    </div>
-                    <div class="field">
-                        <label for="physicalAddress">Dirección física</label>
-                        <input pInputText
-                            id="physicalAddress"
-                            [(ngModel)]="vendor.physicalAddress" />
-                    </div>
-                    <div class="field">
-                        <label for="country">País</label>
-                        <input pInputText
-                            id="country"
-                            [(ngModel)]="vendor.country" />
-                    </div>
-                    <div class="field">
-                        <label for="annualTurnover">Facturación anual</label>
-                        <p-inputNumber
-                            min="0"
-                            id="annualTurnover" 
-                            [(ngModel)]="vendor.annualTurnover" 
-                            mode="currency" 
-                            currency="USD" 
-                             />
-                    </div>
+    [(visible)]="vendorDialog" 
+    [style]="{ width: '450px' }" 
+    header="Detalles del Proveedor" 
+    [modal]="true" 
+    styleClass="p-fluid">
+    <ng-template pTemplate="content">
+        <form [formGroup]="vendorForm">
+            <div class="formgrid grid">
+                <div class="field">
+                    <label for="companyName">Razón social</label>
+                    <input pInputText
+                        id="companyName"
+                        formControlName="companyName" />
+                    @if(vendorForm.get('companyName')?.invalid && vendorForm.get('companyName')?.touched)
+                    {
+                        <small class="p-error">La razón social es requerida</small>
+                    }
                 </div>
-            </ng-template>
 
-            <ng-template pTemplate="footer">
-                <p-button 
-                    pRipple 
-                    label="Cancelar" 
-                    icon="pi pi-times" 
-                    [text]="true" 
-                    (click)="hideDialog()" />
-                <p-button 
-                    pRipple 
-                    label="Guardar" 
-                    icon="pi pi-check" 
-                    [text]="true" 
-                    (click)="saveVendor()" />
-            </ng-template>
-    </p-dialog>
+                <div class="field">
+                    <label for="tradeName">Nombre comercial</label>
+                    <input pInputText
+                        id="tradeName"
+                        formControlName="tradeName" />
+                    @if(vendorForm.get('tradeName')?.invalid && vendorForm.get('tradeName')?.touched)
+                    {
+                        <small class="p-error">El nombre comercial es requerido</small>
+                    }
+                </div>
+
+                <div class="field">
+                    <label for="taxId">Identificación tributaria</label>
+                    <p-inputMask mask="99999999999"
+                        id="taxId"
+                        formControlName="taxId" />
+                    @if(vendorForm.get('taxId')?.invalid && vendorForm.get('taxId')?.touched)
+                    {
+                        @if(vendorForm.get('taxId')?.errors?.['required'])
+                        {
+                            <small class="p-error">La identificación tributaria es requerida</small>
+                        }
+                        @if(vendorForm.get('taxId')?.errors?.['pattern'])
+                        {
+                            <small class="p-error">La identificación tributaria debe tener 11 dígitos</small>
+                        }
+                    }
+                </div>
+
+                <div class="field">
+                    <label for="number">Número telefónico</label>
+                    <p-inputMask mask="999999999"
+                        id="number"
+                        formControlName="number" />
+                    @if(vendorForm.get('number')?.invalid && vendorForm.get('number')?.touched)
+                    {
+                        <small class="p-error">El número telefónico es requerido</small>
+                    }
+                </div>
+
+                <div class="field">
+                    <label for="email">Correo electrónico</label>
+                    <input pInputText
+                        id="email"
+                        formControlName="email" />
+                    @if(vendorForm.get('email')?.invalid && vendorForm.get('email')?.touched)
+                    {
+                        @if(vendorForm.get('email')?.errors?.['required'])
+                        {
+                            <small class="p-error">El correo electrónico es requerido</small>
+                        }
+                        @if(vendorForm.get('email')?.errors?.['email'])
+                        {
+                            <small class="p-error">El formato del correo es incorrecto</small>
+                        }
+                    }
+                </div>
+
+                <div class="field">
+                    <label for="websiteUrl">Sitio web</label>
+                    <input pInputText
+                        id="websiteUrl"
+                        formControlName="websiteUrl" />
+                </div>
+
+                <div class="field">
+                    <label for="physicalAddress">Dirección física</label>
+                    <input pInputText
+                        id="physicalAddress"
+                        formControlName="physicalAddress" />
+                    @if(vendorForm.get('physicalAddress')?.invalid && vendorForm.get('physicalAddress')?.touched)
+                    {
+                        <small class="p-error">La dirección física es requerida</small>
+                    }
+                </div>
+
+                <div class="field">
+                    <label for="country">País</label>
+                    <p-dropdown 
+                    [options]="countries"
+                    formControlName="country"
+                    [showClear]="true"
+                    placeholder="Selecciona un país">
+                        <ng-template pTemplate="selectedItem" let-selectedOption>
+                            <div class="flex align-items-center gap-2">
+                                <div>{{ selectedOption }}</div>
+                            </div>
+                        </ng-template>
+                        <ng-template let-country pTemplate="item">
+                            <div class="flex align-items-center gap-2">
+                                <div>{{ country }}</div>
+                            </div>
+                        </ng-template>
+                </p-dropdown>
+                    @if(vendorForm.get('country')?.invalid && vendorForm.get('country')?.touched)
+                    {
+                        <small class="p-error">El país es requerido</small>
+                    }
+                </div>
+
+                <div class="field">
+                    <label for="annualTurnover">Facturación anual</label>
+                    <p-inputNumber
+                        min="0"
+                        id="annualTurnover" 
+                        formControlName="annualTurnover"
+                        mode="currency" 
+                        currency="USD" />
+                    @if(vendorForm.get('annualTurnover')?.invalid && vendorForm.get('annualTurnover')?.touched)
+                    {
+                        <small class="p-error">La facturación anual es requerida</small>
+                    }
+                </div>
+            </div>
+        </form>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <p-button 
+            pRipple 
+            label="Cancelar" 
+            icon="pi pi-times" 
+            [text]="true" 
+            (click)="hideDialog()" />
+        <p-button 
+            pRipple 
+            label="Guardar" 
+            icon="pi pi-check" 
+            [text]="true" 
+            [disabled]="vendorForm.invalid" 
+            (click)="saveVendor()" />
+    </ng-template>
+</p-dialog>
+
+<p-dialog 
+[(visible)]="screeningDialog" 
+[style]="{ width: '400px' }" 
+header="Selecciona la fuente" 
+[modal]="true" 
+styleClass="p-fluid">
+    <ng-template pTemplate="content">
+        <img alt="OFAC" src="https://sanctionssearch.ofac.treas.gov/images/Logo.png" (click)="openOfacDialog()">
+        <img alt="Offshore Leaks Database" src="https://images.prismic.io/brandfetch/9f190562-c974-450e-869b-a32dd9c85e06_image17.png?auto=compress,format"
+        (click)="openIcijDialog()">
+    </ng-template>
+</p-dialog>
+
+<p-dialog 
+[(visible)]="ofacDialog" 
+[style]="{ width: '90%' }" 
+header="Cruce con OFAC" 
+[modal]="true" 
+styleClass="p-fluid">
+    <ng-template pTemplate="content">
+        <app-ofac-table [name]="name"></app-ofac-table>
+    </ng-template>
+</p-dialog>
+
+<p-dialog 
+[(visible)]="icijDialog" 
+[style]="{ width: '600px' }" 
+header="Cruce con Offshore" 
+[modal]="true" 
+styleClass="p-fluid">
+    <ng-template pTemplate="content">
+        <app-offshore-table [name]="name"></app-offshore-table>
+    </ng-template>
+</p-dialog>
+
 
     <p-confirmDialog [style]="{ width: '450px' }" />
 </div>

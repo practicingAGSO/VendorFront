@@ -11,16 +11,20 @@ import { ToastModule } from 'primeng/toast';
 import { ToolbarModule } from 'primeng/toolbar';
 import { Vendor } from '../../interfaces/vendor';
 import { VendorService } from '../../services/vendor.service';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { InputMaskModule } from 'primeng/inputmask';
+import { OfacTableComponent } from '../../components/ofac-table/ofac-table.component';
+import { OffshoreTableComponent } from '../../components/offshore-table/offshore-table.component';
+import { Router } from '@angular/router';
 
 
 @Component({
   selector: 'app-vendor-page',
   standalone: true,
-  imports: [CommonModule, ToastModule, ToolbarModule, TableModule, ButtonModule,
+  imports: [FormsModule, ReactiveFormsModule,CommonModule, ToastModule, ToolbarModule, TableModule, ButtonModule,
      DialogModule, DropdownModule, InputTextModule, InputNumberModule,
-     ConfirmDialogModule, FormsModule],
+     ConfirmDialogModule, InputMaskModule, DropdownModule,OfacTableComponent, OffshoreTableComponent],
   templateUrl: './vendor-page.component.html',
   styleUrl: './vendor-page.component.css',
   providers: [MessageService, ConfirmationService]
@@ -30,6 +34,10 @@ export class VendorPageComponent {
   @ViewChild('dt') dt: Table | undefined;
 
   vendorDialog: boolean = false;
+  screeningDialog:boolean = false;
+  ofacDialog: boolean = false;
+  icijDialog: boolean = false;
+  name!: string;
 
   vendors!: Vendor[];
 
@@ -39,12 +47,39 @@ export class VendorPageComponent {
 
   create: boolean = false;
 
+  vendorForm!: FormGroup;
+
+  countries: any[] | undefined;
+
+
+
   constructor(private vendorService: VendorService, private messageService: MessageService,
-    private confirmationService: ConfirmationService) {
+    private confirmationService: ConfirmationService, private fb: FormBuilder, private router: Router) {
   }
 
   ngOnInit() {
     this.getVendors();
+    this.vendorForm = this.fb.group({
+      id: [''],
+      companyName: ['', Validators.required],
+      tradeName: ['', Validators.required],
+      taxId: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
+      number: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      websiteUrl: ['', [Validators.required]],
+      physicalAddress: ['', Validators.required],
+      country: ['', Validators.required],
+      annualTurnover: ['', Validators.required]
+    });
+
+    this.countries = [
+      'Australia', 'Brasil', 'China', 'Egipto', 'Francia', 'Alemania',
+      'India', 'Japón', 'España', 'Perú', 'Estados Unidos', 'Argentina',
+      'Canadá', 'Chile', 'Colombia', 'México', 'Noruega', 'Países Bajos',
+      'Portugal', 'Rusia', 'Suecia', 'Suiza', 'Turquía', 'Italia', 'Polonia',
+      'Sudáfrica', 'Nueva Zelanda'
+    ]
+    
   }
 
   applyFilterGlobal($event: any, stringVal: any) {
@@ -53,16 +88,18 @@ export class VendorPageComponent {
 
 
   openNew() {
-    this.vendor = {
-      id: 0,                       
-      companyName: "",              
-      tradeName: "",              
-      taxId: "",                    
-      number: "",                   
-      email: "",                     
-      physicalAddress: "",           
-      country: ""                   
-    };
+    this.vendorForm.patchValue({
+      id: 0,
+      companyName: "",
+      tradeName: "",
+      taxId: "",
+      number: "",
+      websiteUrl: "",
+      email: "",
+      physicalAddress: "",
+      country: "",
+      annualTurnover: 0
+  });
     this.submitted = false;
     this.vendorDialog = true;
     this.create = true;
@@ -70,7 +107,18 @@ export class VendorPageComponent {
 
 editVendor(vendor: Vendor) {
     this.create = false;
-    this.vendor = { ...vendor };
+    this.vendorForm.patchValue({
+      id:vendor.id,
+      companyName: vendor.companyName,
+      tradeName: vendor.tradeName,
+      taxId: vendor.taxId,
+      number: vendor.number,
+      websiteUrl: vendor.websiteUrl,
+      email: vendor.email,
+      physicalAddress: vendor.physicalAddress,
+      country: vendor.country,
+      annualTurnover: vendor.annualTurnover
+  });
     this.vendorDialog = true;
 }
 
@@ -92,6 +140,21 @@ hideDialog() {
   this.submitted = false;
 }
 
+openScreening(name: string){
+  this.name = name;
+  this.screeningDialog = true;
+}
+
+openIcijDialog(){
+  this.screeningDialog = false;
+  this.icijDialog = true;
+}
+
+openOfacDialog(){
+  this.screeningDialog = false;
+  this.ofacDialog = true;
+}
+
 
 getVendors(){
       this.vendorService.getVendors().subscribe({
@@ -102,46 +165,24 @@ getVendors(){
 
 saveVendor() {
       this.submitted = true;
+      const idValue = this.vendorForm.get('id')?.value;
 
-      if(this.vendor.id){
-        let vendorUpdate: Vendor = {
-          id: this.vendor.id,
-          companyName: this.vendor.companyName,              
-          tradeName: this.vendor.tradeName,              
-          taxId: this.vendor.taxId,                    
-          number: this.vendor.number,                   
-          email: this.vendor.email,                     
-          physicalAddress: this.vendor.physicalAddress,           
-          country: this.vendor.country,
-          websiteUrl: this.vendor.websiteUrl,
-          annualTurnover: this.vendor.annualTurnover        
-        }
 
-        this.vendors[this.findIndexById(this.vendor.id)] = this.vendor
+      if(idValue){
 
-        this.vendorService.updateVendor(this.vendor.id, vendorUpdate).subscribe({
+        this.vendors[this.findIndexById(idValue)] = this.vendorForm.value
+        this.vendorForm.patchValue({
+          id: idValue,
+        });        
+        this.vendorService.updateVendor(idValue, this.vendorForm.value).subscribe({
           next: () => { 
               this.getVendors()
               this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Proveedor Actualizado', life: 3000 });}
              
         })
-
       }
       else{
-        let vendor: Vendor = {
-          id: 0,
-          companyName: this.vendor.companyName,              
-          tradeName: this.vendor.tradeName,              
-          taxId: this.vendor.taxId,                    
-          number: this.vendor.number,                   
-          email: this.vendor.email,                     
-          physicalAddress: this.vendor.physicalAddress,           
-          country: this.vendor.country,
-          websiteUrl: this.vendor.websiteUrl,
-          annualTurnover: this.vendor.annualTurnover        
-        }
-
-        this.vendorService.addVendor(vendor).subscribe({
+        this.vendorService.addVendor(this.vendorForm.value).subscribe({
           next: () => { 
               this.getVendors()
               this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Proveedor Registrado', life: 3000 });}
@@ -152,16 +193,18 @@ saveVendor() {
 
       this.vendors = [...this.vendors];
       this.vendorDialog = false;
-      this.vendor = {
-        id: 0,                       
-        companyName: "",              
-        tradeName: "",              
-        taxId: "",                    
-        number: "",                   
-        email: "",                     
-        physicalAddress: "",           
-        country: ""                   
-      };
+      this.vendorForm.patchValue({
+        id: 0,
+        companyName: "",
+        tradeName: "",
+        taxId: "",
+        number: "",
+        websiteUrl: "",
+        email: "",
+        physicalAddress: "",
+        country: "",
+        annualTurnover: 0
+    });
   }
 
   deleteVendor(vendor: Vendor) {
@@ -178,6 +221,11 @@ saveVendor() {
             })
         }
     });
+}
+
+logout(){
+  localStorage.clear();
+  this.router.navigate(['']);
 }
 
 }
